@@ -4,6 +4,9 @@ mod commands;
 mod core;
 use core::*;
 
+/// store module containing the data store
+mod store;
+
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
