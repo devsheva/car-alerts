@@ -29,3 +29,9 @@ fn main() {
         println!("Brand: {}", brand);
     }
 }
+
+#[test]
+fn verify_app() {
+    use clap::CommandFactory;
+    Cli::command().debug_assert();
+}
