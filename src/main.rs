@@ -20,6 +20,7 @@ struct Cli {
 enum Commands {
     Add(commands::Add),
     List(commands::List),
+    Reset(commands::Reset),
 }
 
 fn main() {
@@ -28,6 +29,7 @@ fn main() {
     match cli.command {
         Some(Commands::Add(add)) => add.call(),
         Some(Commands::List(list)) => list.call(),
+        Some(Commands::Reset(reset)) => reset.call(),
         None => println!("No command provided"),
     };
 }
