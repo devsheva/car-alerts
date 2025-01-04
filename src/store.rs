@@ -16,7 +16,6 @@ pub struct Store {}
 impl Store {
     pub fn load() -> Vec<Car> {
         let serialized_cars = read_file(FILE_PATH).expect("Failed to read file");
-        dbg!(&serialized_cars);
         serde_json::from_str(&serialized_cars).expect("JSON wrong formatted")
     }
 
