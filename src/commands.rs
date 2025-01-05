@@ -6,3 +6,16 @@ pub use list::*;
 
 pub mod reset;
 pub use reset::*;
+
+pub mod next_revision;
+pub use next_revision::*;
+
+pub mod utils {
+    use crate::FILE_PATH;
+
+    pub fn teardown() {
+        std::fs::write(FILE_PATH, "[]").expect("Unable to reset file");
+    }
+}
+
+pub use utils::*;
