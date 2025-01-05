@@ -1,5 +1,6 @@
 use std::fs;
 
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 use crate::{read_file, FILE_PATH};
@@ -9,6 +10,7 @@ pub struct Car {
     pub owner: String,
     pub plate: String,
     pub brand: Option<String>,
+    pub last_revision: NaiveDate,
 }
 
 pub struct Store {}
@@ -28,6 +30,8 @@ impl Store {
 #[cfg(test)]
 mod tests {
 
+    use chrono::Local;
+
     use super::*;
 
     fn teardown() {
@@ -46,6 +50,7 @@ mod tests {
             owner: "Mateo".to_string(),
             plate: "1234ABC".to_string(),
             brand: Some("Toyota".to_string()),
+            last_revision: Local::now().naive_local().date(),
         }];
 
         Store::save(&cars);

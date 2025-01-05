@@ -14,7 +14,7 @@ pub mod utils {
     use crate::FILE_PATH;
 
     pub fn teardown() {
-        std::fs::write(FILE_PATH, "[]").expect("Unable to reset file");
+        std::fs::write(FILE_PATH, "[]\n").expect("Unable to reset file");
     }
 }
 

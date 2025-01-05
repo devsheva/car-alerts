@@ -21,15 +21,17 @@ enum Commands {
     Add(commands::Add),
     List(commands::List),
     Reset(commands::Reset),
+    NextRevision(commands::NextRevision),
 }
 
 fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Commands::Add(add)) => add.call(),
-        Some(Commands::List(list)) => list.call(),
-        Some(Commands::Reset(reset)) => reset.call(),
+        Some(Commands::Add(add)) => add.call_with_output(),
+        Some(Commands::List(list)) => list.call_with_output(),
+        Some(Commands::Reset(reset)) => reset.call_with_output(),
+        Some(Commands::NextRevision(next_revision)) => next_revision.call_with_output(),
         None => println!("No command provided"),
     };
 }
