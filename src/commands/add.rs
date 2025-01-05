@@ -1,6 +1,8 @@
 use crate::core::Call;
 use crate::store::{Car, Store};
+use crate::DTO;
 
+use chrono::NaiveDate;
 use clap::Args;
 
 #[derive(Args)]
@@ -17,19 +19,60 @@ pub struct Add {
     /// The brand of the car
     #[arg(short, long)]
     pub brand: String,
+
+    /// Last revision date
+    /// Format: yyyy-mm-dd
+    #[arg(short, long)]
+    pub last_revision: NaiveDate,
+}
+
+#[derive(Debug)]
+pub struct AddDTO {
+    owner: String,
+    plate: String,
+    brand: String,
+    last_revision: NaiveDate,
+}
+
+impl DTO for AddDTO {
+    fn to_string(&self) -> String {
+        format!(
+            "Car added: owner: {}, plate: {}, brand: {}, last revision: {}",
+            self.owner, self.plate, self.brand, self.last_revision
+        )
+    }
 }
 
 impl Call for Add {
-    fn call(&self) {
+    type Output = AddDTO;
+
+    fn call_with_output(&self) {
+        match self.call() {
+            Ok(output) => println!("{}", output.to_string()),
+            Err(error) => eprintln!("{}", error),
+        }
+    }
+
+    fn call(&self) -> Result<AddDTO, String> {
         let mut cars = Store::load();
 
-        cars.push(Car {
+        let car = Car {
             owner: self.owner.clone(),
             plate: self.plate.clone(),
             brand: Some(self.brand.clone()),
-        });
+            last_revision: self.last_revision,
+        };
+
+        cars.push(car);
 
         Store::save(&cars);
+
+        Ok(AddDTO {
+            owner: self.owner.clone(),
+            plate: self.plate.clone(),
+            brand: self.brand.clone(),
+            last_revision: self.last_revision.clone(),
+        })
     }
 }
 
@@ -44,6 +87,7 @@ mod tests {
             owner: "Mateo".to_string(),
             plate: "1234ABC".to_string(),
             brand: "Toyota".to_string(),
+            last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
         };
 
         add.call();
@@ -52,4 +96,7 @@ mod tests {
         assert_eq!(add.plate, "1234ABC");
         assert_eq!(add.brand, "Toyota");
     }
+
+    #[test]
+    fn test_add_duplicate_plate() {}
 }
