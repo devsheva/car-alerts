@@ -23,6 +23,7 @@ enum Commands {
     Reset(commands::Reset),
     NextRevision(commands::NextRevision),
     MarkRevision(commands::MarkRevision),
+    NextRoadTax(commands::NextRoadTax),
 }
 
 fn main() {
@@ -34,6 +35,7 @@ fn main() {
         Some(Commands::Reset(reset)) => reset.call_with_output(),
         Some(Commands::NextRevision(next_revision)) => next_revision.call_with_output(),
         Some(Commands::MarkRevision(mark_revision)) => mark_revision.call_with_output(),
+        Some(Commands::NextRoadTax(next_road_tax)) => next_road_tax.call_with_output(),
         None => println!("No command provided"),
     };
 }
