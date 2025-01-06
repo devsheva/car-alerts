@@ -11,6 +11,7 @@ pub struct Car {
     pub plate: String,
     pub brand: Option<String>,
     pub last_revision: NaiveDate,
+    pub last_road_tax: NaiveDate,
 }
 
 pub struct Store {}
@@ -51,6 +52,7 @@ mod tests {
             plate: "1234ABC".to_string(),
             brand: Some("Toyota".to_string()),
             last_revision: Local::now().naive_local().date(),
+            last_road_tax: Local::now().naive_local().date(),
         }];
 
         Store::save(&cars);

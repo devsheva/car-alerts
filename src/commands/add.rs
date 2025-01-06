@@ -22,12 +22,12 @@ pub struct Add {
 
     /// Last revision date
     /// Format: yyyy-mm-dd
-    #[arg(short, long)]
+    #[arg(long)]
     pub last_revision: NaiveDate,
 
     /// Last road tax date
     /// Format: yyyy-mm-dd
-    #[arg(short, long)]
+    #[arg(long)]
     pub last_road_tax: NaiveDate,
 }
 
