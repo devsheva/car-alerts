@@ -22,6 +22,7 @@ enum Commands {
     List(commands::List),
     Reset(commands::Reset),
     NextRevision(commands::NextRevision),
+    MarkRevision(commands::MarkRevision),
 }
 
 fn main() {
@@ -32,6 +33,7 @@ fn main() {
         Some(Commands::List(list)) => list.call_with_output(),
         Some(Commands::Reset(reset)) => reset.call_with_output(),
         Some(Commands::NextRevision(next_revision)) => next_revision.call_with_output(),
+        Some(Commands::MarkRevision(mark_revision)) => mark_revision.call_with_output(),
         None => println!("No command provided"),
     };
 }

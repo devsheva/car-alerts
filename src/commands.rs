@@ -10,6 +10,9 @@ pub use reset::*;
 pub mod next_revision;
 pub use next_revision::*;
 
+pub mod mark_revision;
+pub use mark_revision::*;
+
 pub mod utils {
     use crate::FILE_PATH;
 
