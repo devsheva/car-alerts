@@ -26,6 +26,10 @@ impl Store {
         let json_data = serde_json::to_string(&cars).expect("Unable to serialize cars");
         fs::write(FILE_PATH, json_data).expect("Unable to write to file");
     }
+
+    pub fn find_by_plate(plate: &str) {
+        todo!("implement")
+    }
 }
 
 #[cfg(test)]
