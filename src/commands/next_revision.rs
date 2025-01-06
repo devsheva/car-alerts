@@ -71,6 +71,7 @@ mod tests {
             plate: "1234ABC".to_string(),
             brand: "Toyota".to_string(),
             last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
         }
         .call();
     }

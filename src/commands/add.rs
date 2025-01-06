@@ -24,6 +24,11 @@ pub struct Add {
     /// Format: yyyy-mm-dd
     #[arg(short, long)]
     pub last_revision: NaiveDate,
+
+    /// Last road tax date
+    /// Format: yyyy-mm-dd
+    #[arg(short, long)]
+    pub last_road_tax: NaiveDate,
 }
 
 #[derive(Debug)]
@@ -32,13 +37,14 @@ pub struct AddDTO {
     plate: String,
     brand: String,
     last_revision: NaiveDate,
+    last_road_tax: NaiveDate,
 }
 
 impl DTO for AddDTO {
     fn to_string(&self) -> String {
         format!(
-            "Car added: owner: {}, plate: {}, brand: {}, last revision: {}",
-            self.owner, self.plate, self.brand, self.last_revision
+            "Car added: owner: {}, plate: {}, brand: {}, last revision: {}, last road tax: {}",
+            self.owner, self.plate, self.brand, self.last_revision, self.last_road_tax
         )
     }
 }
@@ -61,6 +67,7 @@ impl Call for Add {
             plate: self.plate.clone(),
             brand: Some(self.brand.clone()),
             last_revision: self.last_revision,
+            last_road_tax: self.last_road_tax,
         };
 
         cars.push(car);
@@ -71,7 +78,8 @@ impl Call for Add {
             owner: self.owner.clone(),
             plate: self.plate.clone(),
             brand: self.brand.clone(),
-            last_revision: self.last_revision.clone(),
+            last_revision: self.last_revision,
+            last_road_tax: self.last_road_tax,
         })
     }
 }
@@ -88,6 +96,7 @@ mod tests {
             plate: "1234ABC".to_string(),
             brand: "Toyota".to_string(),
             last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
         };
 
         add.call();
