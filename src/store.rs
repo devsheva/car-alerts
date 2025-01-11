@@ -27,8 +27,9 @@ impl Store {
         fs::write(FILE_PATH, json_data).expect("Unable to write to file");
     }
 
-    pub fn find_by_plate(plate: &str) {
-        todo!("implement")
+    pub fn find_by_plate(plate: &str) -> Option<Car> {
+        let cars = Store::load();
+        cars.into_iter().find(|car| car.plate == plate)
     }
 }
 
@@ -63,5 +64,29 @@ mod tests {
         assert_eq!(Store::load().len(), 1);
 
         teardown();
+    }
+
+    #[test]
+    fn test_find_by_plate_success() {
+        let cars = vec![Car {
+            owner: "Mateo".to_string(),
+            plate: "1234ABC".to_string(),
+            brand: Some("Toyota".to_string()),
+            last_revision: Local::now().naive_local().date(),
+            last_road_tax: Local::now().naive_local().date(),
+        }];
+        Store::save(&cars);
+
+        let car = Store::find_by_plate("1234ABC").unwrap();
+        assert_eq!(car.plate, "1234ABC");
+
+        teardown();
+    }
+
+    #[test]
+    fn test_find_by_plate_not_found() {
+        let car = Store::find_by_plate("wrong");
+
+        assert!(car.is_none());
     }
 }
