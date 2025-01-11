@@ -62,6 +62,10 @@ impl Call for Add {
     fn call(&self) -> Result<AddDTO, String> {
         let mut cars = Store::load();
 
+        if let Some(_) = Store::find_by_plate(self.plate.as_str()) {
+            return Err("Plate already exists".to_string());
+        }
+
         let car = Car {
             owner: self.owner.clone(),
             plate: self.plate.clone(),
@@ -87,6 +91,8 @@ impl Call for Add {
 #[cfg(test)]
 mod tests {
 
+    use crate::commands::teardown;
+
     use super::*;
 
     #[test]
@@ -104,8 +110,34 @@ mod tests {
         assert_eq!(add.owner, "Mateo");
         assert_eq!(add.plate, "1234ABC");
         assert_eq!(add.brand, "Toyota");
+
+        teardown();
     }
 
     #[test]
-    fn test_add_duplicate_plate() {}
+    fn test_add_duplicate_plate() {
+        let add = Add {
+            owner: "Mateo".to_string(),
+            plate: "1234ABC".to_string(),
+            brand: "Toyota".to_string(),
+            last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+        };
+
+        add.call();
+
+        let add = Add {
+            owner: "Mateo".to_string(),
+            plate: "1234ABC".to_string(),
+            brand: "Toyota".to_string(),
+            last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+        };
+
+        let result = add.call();
+
+        assert_eq!(result.unwrap_err(), "Plate already exists");
+
+        teardown();
+    }
 }
