@@ -38,12 +38,10 @@ impl Call for NextRevision {
     }
 
     fn call(&self) -> Result<NextRevisionDTO, String> {
-        println!("Next revision");
-
-        let cars = Store::load();
-
-        match cars.iter().find(|car| car.plate == self.plate) {
-            Some(car) => {
+        match Store::find_by_plate(self.plate.as_str()) {
+            Some(index) => {
+                let cars = Store::load();
+                let car = &cars[index];
                 let next_revision = car.last_revision + chrono::Months::new(24);
 
                 Ok(NextRevisionDTO {

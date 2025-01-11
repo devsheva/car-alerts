@@ -27,9 +27,9 @@ impl Store {
         fs::write(FILE_PATH, json_data).expect("Unable to write to file");
     }
 
-    pub fn find_by_plate(plate: &str) -> Option<Car> {
+    pub fn find_by_plate(plate: &str) -> Option<usize> {
         let cars = Store::load();
-        cars.into_iter().find(|car| car.plate == plate)
+        cars.into_iter().position(|car| car.plate == plate)
     }
 }
 
@@ -77,7 +77,8 @@ mod tests {
         }];
         Store::save(&cars);
 
-        let car = Store::find_by_plate("1234ABC").unwrap();
+        let car_index = Store::find_by_plate("1234ABC").unwrap();
+        let car = cars.get(car_index).unwrap();
         assert_eq!(car.plate, "1234ABC");
 
         teardown();

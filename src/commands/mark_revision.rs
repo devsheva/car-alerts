@@ -1,3 +1,5 @@
+use std::borrow::BorrowMut;
+
 use clap::Args;
 
 use crate::{store::Store, Call, DTO};
@@ -34,12 +36,15 @@ impl Call for MarkRevision {
     fn call(&self) -> Result<MarkRevisionDTO, String> {
         let mut cars = Store::load();
 
-        let car = cars.iter_mut().find(|car| car.plate == self.plate);
+        let car_index = Store::find_by_plate(self.plate.as_str());
 
-        match car {
-            Some(car) => {
+        match car_index {
+            Some(index) => {
+                let car = cars.get_mut(index).unwrap();
+
                 car.last_revision = chrono::Local::now().date_naive();
-                Store::save(&cars);
+
+                Store::save(cars.as_slice());
                 Ok(MarkRevisionDTO { done: true })
             }
             None => Err("Car not found".to_string()),

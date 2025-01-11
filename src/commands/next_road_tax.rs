@@ -38,10 +38,9 @@ impl Call for NextRoadTax {
     fn call(&self) -> Result<Self::Output, String> {
         let cars = Store::load();
 
-        let car = cars.iter().find(|car| car.plate == self.plate);
-
-        match car {
-            Some(car) => {
+        match Store::find_by_plate(self.plate.as_str()) {
+            Some(index) => {
+                let car = &cars[index];
                 let next_road_tax_date = car.last_road_tax + chrono::Months::new(12);
 
                 Ok(NextRoadTaxDTO {
