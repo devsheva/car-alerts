@@ -16,6 +16,9 @@ pub use mark_revision::*;
 pub mod next_road_tax;
 pub use next_road_tax::*;
 
+pub mod checklist;
+pub use checklist::*;
+
 pub mod utils {
     use crate::FILE_PATH;
 

@@ -24,6 +24,7 @@ enum Commands {
     NextRevision(commands::NextRevision),
     MarkRevision(commands::MarkRevision),
     NextRoadTax(commands::NextRoadTax),
+    Checklist(commands::Checklist),
 }
 
 fn main() {
@@ -36,6 +37,7 @@ fn main() {
         Some(Commands::NextRevision(next_revision)) => next_revision.call_with_output(),
         Some(Commands::MarkRevision(mark_revision)) => mark_revision.call_with_output(),
         Some(Commands::NextRoadTax(next_road_tax)) => next_road_tax.call_with_output(),
+        Some(Commands::Checklist(checklist)) => checklist.call_with_output(),
         None => println!("No command provided"),
     };
 }
