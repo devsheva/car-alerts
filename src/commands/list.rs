@@ -16,7 +16,7 @@ pub struct ListDTO {
 
 impl DTO for ListDTO {
     fn to_string(&self) -> String {
-        format!("{:?}", self.cars)
+        format!("{:#?}", self.cars)
     }
 }
 
