@@ -18,13 +18,3 @@ pub use next_road_tax::*;
 
 pub mod checklist;
 pub use checklist::*;
-
-pub mod utils {
-    use crate::FILE_PATH;
-
-    pub fn teardown() {
-        std::fs::write(FILE_PATH, "[]\n").expect("Unable to reset file");
-    }
-}
-
-pub use utils::*;

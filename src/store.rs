@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{read_file, FILE_PATH};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Car {
     pub owner: String,
     pub plate: String,

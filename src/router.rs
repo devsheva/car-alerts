@@ -1,8 +1,13 @@
 use crate::handlers::car;
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 
 pub fn app() -> Router {
-    Router::new().route("/cars", get(car::list))
+    Router::new()
+        .route("/cars", get(car::list))
+        .route("/cars", post(car::add))
 }
 
 #[cfg(test)]
