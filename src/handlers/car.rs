@@ -1,6 +1,7 @@
 use std::fs;
 
 use axum::{extract::Path, response::IntoResponse, Json};
+use chrono::NaiveDate;
 use hyper::StatusCode;
 use serde::Serialize;
 
@@ -53,6 +54,29 @@ pub async fn next_revision(Path(plate): Path<String>) -> Result<impl IntoRespons
                 plate: car.plate.clone(),
                 brand: car.brand.clone(),
                 next_revision: next_revision.clone(),
+            }))
+        }
+        None => Err(StatusCode::NOT_FOUND),
+    }
+}
+
+#[derive(Serialize)]
+pub struct NextRoadTaxDTO {
+    plate: String,
+    next_road_tax_date: NaiveDate,
+}
+
+pub async fn next_road_tax(Path(plate): Path<String>) -> Result<impl IntoResponse, StatusCode> {
+    let cars = Store::load();
+
+    match Store::find_by_plate(plate.as_str()) {
+        Some(index) => {
+            let car = &cars[index];
+            let next_road_tax_date = car.last_road_tax + chrono::Months::new(12);
+
+            Ok(Json(NextRoadTaxDTO {
+                plate: car.plate.clone(),
+                next_road_tax_date,
             }))
         }
         None => Err(StatusCode::NOT_FOUND),
@@ -151,5 +175,31 @@ mod tests {
 
         let output = cmd.call();
         assert_eq!(output.unwrap_err(), "Car not found");
+    }
+
+    #[tokio::test]
+    async fn test_not_found() {
+        let cmd = NextRoadTax {
+            plate: "not_found".to_string(),
+        };
+
+        let result = cmd.call();
+        assert_eq!(result.unwrap_err(), "Car with plate not_found not found");
+    }
+
+    #[tokio::test]
+    async fn test_success() {
+        setup();
+
+        let cmd = NextRoadTax {
+            plate: "1234".to_string(),
+        };
+
+        let result = cmd.call();
+        assert_eq!(
+            result.unwrap().next_road_tax_date,
+            NaiveDate::from_ymd_opt(2021, 1, 1).unwrap()
+        );
+        teardown();
     }
 }
