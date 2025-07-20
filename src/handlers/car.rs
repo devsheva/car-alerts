@@ -1,7 +1,12 @@
+use std::fs;
+
 use axum::{response::IntoResponse, Json};
 use hyper::StatusCode;
 
-use crate::store::{Car, Store};
+use crate::{
+    core::FILE_PATH,
+    store::{Car, Store},
+};
 
 pub async fn list() -> Json<Vec<Car>> {
     Json(Store::load())
@@ -19,6 +24,14 @@ pub async fn add(Json(car): Json<Car>) -> Result<impl IntoResponse, StatusCode> 
     Store::save(&cars);
 
     Ok((StatusCode::CREATED, Json(car)))
+}
+
+pub async fn reset() -> StatusCode {
+    if fs::write(FILE_PATH, "[]").is_ok() {
+        StatusCode::OK
+    } else {
+        StatusCode::INTERNAL_SERVER_ERROR
+    }
 }
 
 #[cfg(test)]
@@ -77,5 +90,17 @@ mod tests {
         assert_eq!(result.unwrap_err(), "Plate already exists");
 
         teardown();
+    }
+
+    #[tokio::test]
+    async fn test_reset() {
+        setup();
+
+        let content = fs::read_to_string(FILE_PATH).unwrap();
+        assert_ne!(content, "[]");
+
+        let result = reset().await;
+
+        assert_eq!(result, StatusCode::OK);
     }
 }
