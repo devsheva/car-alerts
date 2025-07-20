@@ -1,7 +1,8 @@
 use std::fs;
 
-use axum::{response::IntoResponse, Json};
+use axum::{extract::Path, response::IntoResponse, Json};
 use hyper::StatusCode;
+use serde::Serialize;
 
 use crate::{
     core::FILE_PATH,
@@ -31,6 +32,30 @@ pub async fn reset() -> StatusCode {
         StatusCode::OK
     } else {
         StatusCode::INTERNAL_SERVER_ERROR
+    }
+}
+
+#[derive(Serialize)]
+pub struct NextRevisionDTO {
+    plate: String,
+    brand: Option<String>,
+    next_revision: chrono::NaiveDate,
+}
+
+pub async fn next_revision(Path(plate): Path<String>) -> Result<impl IntoResponse, StatusCode> {
+    match Store::find_by_plate(plate.as_str()) {
+        Some(index) => {
+            let cars = Store::load();
+            let car = &cars[index];
+            let next_revision = car.last_revision + chrono::Months::new(24);
+
+            Ok(Json(NextRevisionDTO {
+                plate: car.plate.clone(),
+                brand: car.brand.clone(),
+                next_revision: next_revision.clone(),
+            }))
+        }
+        None => Err(StatusCode::NOT_FOUND),
     }
 }
 
@@ -102,5 +127,29 @@ mod tests {
         let result = reset().await;
 
         assert_eq!(result, StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_next_revision() {
+        setup();
+
+        let cmd = NextRevision {
+            plate: "1234ABC".to_string(),
+        };
+
+        let result = cmd.call().unwrap();
+        assert_eq!(result.plate, "1234ABC");
+
+        teardown();
+    }
+
+    #[tokio::test]
+    async fn test_not_found() {
+        let cmd = NextRevision {
+            plate: "1234ABC".to_string(),
+        };
+
+        let output = cmd.call();
+        assert_eq!(output.unwrap_err(), "Car not found");
     }
 }
