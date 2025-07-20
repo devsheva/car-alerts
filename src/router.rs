@@ -5,9 +5,7 @@ use axum::{
 };
 
 pub fn app() -> Router {
-    Router::new()
-        .route("/cars", get(car::list))
-        .route("/cars", post(car::add))
+    Router::new().route("/cars", get(car::list).post(car::add))
 }
 
 #[cfg(test)]

@@ -7,18 +7,18 @@ pub async fn list() -> Json<Vec<Car>> {
     Json(Store::load())
 }
 
-pub async fn add(Json(car): Json<Car>) -> impl IntoResponse {
+pub async fn add(Json(car): Json<Car>) -> Result<impl IntoResponse, StatusCode> {
     let mut cars = Store::load();
 
     if let Some(_) = Store::find_by_plate(car.plate.as_str()) {
-        return (StatusCode::NOT_FOUND, "Plate already exists".to_string());
+        return Err(StatusCode::NOT_FOUND);
     }
 
     cars.push(car.clone());
 
     Store::save(&cars);
 
-    (StatusCode::CREATED, "Car added successfully".to_string())
+    Ok((StatusCode::CREATED, Json(car)))
 }
 
 #[cfg(test)]
