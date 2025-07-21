@@ -1,4 +1,4 @@
-use std::{fmt::Debug, fs, io};
+use std::{fs, io};
 
 #[cfg(not(test))]
 pub const FILE_PATH: &str = "src/cars.json";
@@ -16,5 +16,3 @@ pub mod utils {
         std::fs::write(FILE_PATH, "[]\n").expect("Unable to reset file");
     }
 }
-
-pub use utils::*;

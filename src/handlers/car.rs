@@ -101,6 +101,35 @@ pub async fn mark_revision(Path(plate): Path<String>) -> StatusCode {
     }
 }
 
+#[derive(Serialize)]
+pub struct ChecklistDTO {
+    plate: String,
+    next_revision: NaiveDate,
+    next_road_tax: NaiveDate,
+}
+
+pub async fn checklist(Path(plate): Path<String>) -> Result<impl IntoResponse, StatusCode> {
+    let car_index = Store::find_by_plate(plate.as_str());
+
+    match car_index {
+        Some(index) => {
+            let cars = Store::load();
+            let car = &cars[index];
+
+            let next_revision: NaiveDate = car.last_revision + chrono::Months::new(24);
+
+            let next_road_tax: NaiveDate = car.last_road_tax + chrono::Months::new(12);
+
+            Ok(Json(ChecklistDTO {
+                plate: plate.clone(),
+                next_revision,
+                next_road_tax,
+            }))
+        }
+        None => Err(StatusCode::NOT_FOUND),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::core::teardown;
@@ -246,5 +275,28 @@ mod tests {
         };
         let result = cmd.call();
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_success() {
+        setup();
+        let cmd = Checklist {
+            plate: "123".to_string(),
+        };
+
+        let res = cmd.call();
+        assert!(res.is_ok());
+
+        teardown();
+    }
+
+    #[test]
+    fn test_failure() {
+        let cmd = Checklist {
+            plate: "1234".to_string(),
+        };
+
+        let res = cmd.call();
+        assert_eq!(res.unwrap_err(), "Plate is invalid");
     }
 }

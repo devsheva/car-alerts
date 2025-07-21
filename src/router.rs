@@ -13,6 +13,7 @@ pub fn app() -> Router {
             get(car::next_revision).put(car::mark_revision),
         )
         .route("/cars/{plate}/next_road_tax", get(car::next_road_tax))
+        .route("/cars/{plate}/checklist", get(car::checklist))
 }
 
 #[cfg(test)]
