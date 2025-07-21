@@ -30,7 +30,7 @@ pub async fn add(Json(car): Json<Car>) -> Result<impl IntoResponse, StatusCode> 
 
 pub async fn reset() -> StatusCode {
     if fs::write(FILE_PATH, "[]").is_ok() {
-        StatusCode::OK
+        StatusCode::NO_CONTENT
     } else {
         StatusCode::INTERNAL_SERVER_ERROR
     }
@@ -80,6 +80,24 @@ pub async fn next_road_tax(Path(plate): Path<String>) -> Result<impl IntoRespons
             }))
         }
         None => Err(StatusCode::NOT_FOUND),
+    }
+}
+
+pub async fn mark_revision(Path(plate): Path<String>) -> StatusCode {
+    let mut cars = Store::load();
+
+    let car_index = Store::find_by_plate(plate.as_str());
+
+    match car_index {
+        Some(index) => {
+            let car = cars.get_mut(index).unwrap();
+
+            car.last_revision = chrono::Local::now().date_naive();
+
+            Store::save(cars.as_slice());
+            StatusCode::OK
+        }
+        None => StatusCode::NOT_FOUND,
     }
 }
 
@@ -201,5 +219,32 @@ mod tests {
             NaiveDate::from_ymd_opt(2021, 1, 1).unwrap()
         );
         teardown();
+    }
+
+    #[test]
+    fn test_success() {
+        setup();
+
+        let cmd = MarkRevision {
+            plate: "1234ABC".to_string(),
+        };
+        let result = cmd.call();
+
+        assert_eq!(result.unwrap().done, true);
+
+        let cars = Store::load();
+        let car = cars.iter().find(|car| car.plate == "1234ABC").unwrap();
+        assert_eq!(car.last_revision, chrono::Local::now().date_naive());
+
+        teardown();
+    }
+
+    #[test]
+    fn test_not_found() {
+        let cmd = MarkRevision {
+            plate: "not-found".to_string(),
+        };
+        let result = cmd.call();
+        assert!(result.is_err());
     }
 }
