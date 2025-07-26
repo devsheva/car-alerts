@@ -3,7 +3,7 @@ use std::fs;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-use crate::{read_file, FILE_PATH};
+use crate::core::{read_file, FILE_PATH};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Car {

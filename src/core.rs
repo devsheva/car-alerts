@@ -10,7 +10,7 @@ pub fn read_file(path: &str) -> io::Result<String> {
 }
 
 pub mod utils {
-    use crate::FILE_PATH;
+    use super::FILE_PATH;
 
     pub fn teardown() {
         std::fs::write(FILE_PATH, "[]\n").expect("Unable to reset file");

@@ -132,7 +132,7 @@ pub async fn checklist(Path(plate): Path<String>) -> Result<impl IntoResponse, S
 
 #[cfg(test)]
 mod tests {
-    use crate::core::teardown;
+    use crate::core::utils::teardown;
     use chrono::NaiveDate;
 
     use super::*;

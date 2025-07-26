@@ -1,13 +1,4 @@
-/// core module containing useful traits
-mod core;
-use core::*;
-
-mod handlers;
-/// store module containing the data store
-mod store;
-
-mod router;
-use router::app;
+use car_alerts::router::app;
 
 #[tokio::main]
 async fn main() {
