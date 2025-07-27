@@ -18,13 +18,13 @@ pub struct Store {}
 
 impl Store {
     pub fn load() -> Vec<Car> {
-        let serialized_cars = read_file(FILE_PATH).expect("Failed to read file");
+        let serialized_cars = read_file(unsafe { FILE_PATH }).expect("Failed to read file");
         serde_json::from_str(&serialized_cars).expect("JSON wrong formatted")
     }
 
     pub fn save(cars: &[Car]) {
         let json_data = serde_json::to_string(&cars).expect("Unable to serialize cars");
-        fs::write(FILE_PATH, json_data).expect("Unable to write to file");
+        fs::write(unsafe { FILE_PATH }, json_data).expect("Unable to write to file");
     }
 
     pub fn find_by_plate(plate: &str) -> Option<usize> {
@@ -38,20 +38,24 @@ mod tests {
 
     use chrono::Local;
 
+    use crate::core::utils::setup;
+
     use super::*;
 
     fn teardown() {
-        fs::write(FILE_PATH, "[]").expect("Unable to reset file");
+        fs::write(unsafe { FILE_PATH }, "[]").expect("Unable to reset file");
     }
 
     #[test]
     fn test_load() {
+        setup();
         let cars = Store::load();
         assert_eq!(cars.len(), 0);
     }
 
     #[test]
     fn test_save() {
+        setup();
         let cars = vec![Car {
             owner: "Mateo".to_string(),
             plate: "1234ABC".to_string(),
@@ -68,6 +72,8 @@ mod tests {
 
     #[test]
     fn test_find_by_plate_success() {
+        setup();
+
         let cars = vec![Car {
             owner: "Mateo".to_string(),
             plate: "1234ABC".to_string(),
@@ -86,6 +92,8 @@ mod tests {
 
     #[test]
     fn test_find_by_plate_not_found() {
+        setup();
+
         let car = Store::find_by_plate("wrong");
 
         assert!(car.is_none());

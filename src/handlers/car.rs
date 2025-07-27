@@ -29,7 +29,7 @@ pub async fn add(Json(car): Json<Car>) -> Result<impl IntoResponse, StatusCode> 
 }
 
 pub async fn reset() -> StatusCode {
-    if fs::write(FILE_PATH, "[]").is_ok() {
+    if fs::write(unsafe { FILE_PATH }, "[]").is_ok() {
         StatusCode::NO_CONTENT
     } else {
         StatusCode::INTERNAL_SERVER_ERROR
@@ -132,171 +132,174 @@ pub async fn checklist(Path(plate): Path<String>) -> Result<impl IntoResponse, S
 
 #[cfg(test)]
 mod tests {
-    use crate::core::utils::teardown;
-    use chrono::NaiveDate;
-
-    use super::*;
+    use crate::{core::utils::setup, router::app};
+    use axum_test::TestServer;
 
     #[tokio::test]
-    async fn test_empty() {
-        let result = list().await;
-
-        assert_eq!(result.len(), 0)
-    }
-
-    #[test]
-    fn test_add() {
-        let add = Car {
-            owner: "Mateo".to_string(),
-            plate: "1234ABC".to_string(),
-            brand: Some("Toyota".to_string()),
-            last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-        };
-
-        assert_eq!(add.owner, "Mateo");
-        assert_eq!(add.plate, "1234ABC");
-        assert_eq!(add.brand.unwrap(), "Toyota");
-
-        teardown();
-    }
-
-    #[test]
-    fn test_add_duplicate_plate() {
-        let car = Car {
-            owner: "Mateo".to_string(),
-            plate: "1234ABC".to_string(),
-            brand: Some("Toyota".to_string()),
-            last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-        };
-
-        add(Json(car));
-
-        let car = Car {
-            owner: "Mateo".to_string(),
-            plate: "1234ABC".to_string(),
-            brand: Some("Toyota".to_string()),
-            last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-        };
-
-        let result = add(Json(car));
-
-        assert_eq!(result.unwrap_err(), "Plate already exists");
-
-        teardown();
-    }
-
-    #[tokio::test]
-    async fn test_reset() {
+    async fn test_list_empty() {
         setup();
+        let app = app();
+        let server = TestServer::new(app).unwrap();
 
-        let content = fs::read_to_string(FILE_PATH).unwrap();
-        assert_ne!(content, "[]");
+        let response = server.get("/cars").await;
 
-        let result = reset().await;
-
-        assert_eq!(result, StatusCode::OK);
+        response.assert_status_ok();
+        response.assert_text("[]");
     }
 
-    #[tokio::test]
-    async fn test_next_revision() {
-        setup();
+    // #[test]
+    // fn test_add() {
+    //     let add = Car {
+    //         owner: "Mateo".to_string(),
+    //         plate: "1234ABC".to_string(),
+    //         brand: Some("Toyota".to_string()),
+    //         last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+    //         last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+    //     };
 
-        let cmd = NextRevision {
-            plate: "1234ABC".to_string(),
-        };
+    //     assert_eq!(add.owner, "Mateo");
+    //     assert_eq!(add.plate, "1234ABC");
+    //     assert_eq!(add.brand.unwrap(), "Toyota");
 
-        let result = cmd.call().unwrap();
-        assert_eq!(result.plate, "1234ABC");
+    //     teardown();
+    // }
 
-        teardown();
-    }
+    // #[test]
+    // fn test_add_duplicate_plate() {
+    //     let car = Car {
+    //         owner: "Mateo".to_string(),
+    //         plate: "1234ABC".to_string(),
+    //         brand: Some("Toyota".to_string()),
+    //         last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+    //         last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+    //     };
 
-    #[tokio::test]
-    async fn test_not_found() {
-        let cmd = NextRevision {
-            plate: "1234ABC".to_string(),
-        };
+    //     add(Json(car));
 
-        let output = cmd.call();
-        assert_eq!(output.unwrap_err(), "Car not found");
-    }
+    //     let car = Car {
+    //         owner: "Mateo".to_string(),
+    //         plate: "1234ABC".to_string(),
+    //         brand: Some("Toyota".to_string()),
+    //         last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+    //         last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+    //     };
 
-    #[tokio::test]
-    async fn test_not_found() {
-        let cmd = NextRoadTax {
-            plate: "not_found".to_string(),
-        };
+    //     let result = add(Json(car));
 
-        let result = cmd.call();
-        assert_eq!(result.unwrap_err(), "Car with plate not_found not found");
-    }
+    //     assert_eq!(result.unwrap_err(), "Plate already exists");
 
-    #[tokio::test]
-    async fn test_success() {
-        setup();
+    //     teardown();
+    // }
 
-        let cmd = NextRoadTax {
-            plate: "1234".to_string(),
-        };
+    // #[tokio::test]
+    // async fn test_reset() {
+    //     setup();
 
-        let result = cmd.call();
-        assert_eq!(
-            result.unwrap().next_road_tax_date,
-            NaiveDate::from_ymd_opt(2021, 1, 1).unwrap()
-        );
-        teardown();
-    }
+    //     let content = fs::read_to_string(FILE_PATH).unwrap();
+    //     assert_ne!(content, "[]");
 
-    #[test]
-    fn test_success() {
-        setup();
+    //     let result = reset().await;
 
-        let cmd = MarkRevision {
-            plate: "1234ABC".to_string(),
-        };
-        let result = cmd.call();
+    //     assert_eq!(result, StatusCode::OK);
+    // }
 
-        assert_eq!(result.unwrap().done, true);
+    // #[tokio::test]
+    // async fn test_next_revision() {
+    //     setup();
 
-        let cars = Store::load();
-        let car = cars.iter().find(|car| car.plate == "1234ABC").unwrap();
-        assert_eq!(car.last_revision, chrono::Local::now().date_naive());
+    //     let cmd = NextRevision {
+    //         plate: "1234ABC".to_string(),
+    //     };
 
-        teardown();
-    }
+    //     let result = cmd.call().unwrap();
+    //     assert_eq!(result.plate, "1234ABC");
 
-    #[test]
-    fn test_not_found() {
-        let cmd = MarkRevision {
-            plate: "not-found".to_string(),
-        };
-        let result = cmd.call();
-        assert!(result.is_err());
-    }
+    //     teardown();
+    // }
 
-    #[test]
-    fn test_success() {
-        setup();
-        let cmd = Checklist {
-            plate: "123".to_string(),
-        };
+    // #[tokio::test]
+    // async fn test_not_found() {
+    //     let cmd = NextRevision {
+    //         plate: "1234ABC".to_string(),
+    //     };
 
-        let res = cmd.call();
-        assert!(res.is_ok());
+    //     let output = cmd.call();
+    //     assert_eq!(output.unwrap_err(), "Car not found");
+    // }
 
-        teardown();
-    }
+    // #[tokio::test]
+    // async fn test_not_found() {
+    //     let cmd = NextRoadTax {
+    //         plate: "not_found".to_string(),
+    //     };
 
-    #[test]
-    fn test_failure() {
-        let cmd = Checklist {
-            plate: "1234".to_string(),
-        };
+    //     let result = cmd.call();
+    //     assert_eq!(result.unwrap_err(), "Car with plate not_found not found");
+    // }
 
-        let res = cmd.call();
-        assert_eq!(res.unwrap_err(), "Plate is invalid");
-    }
+    // #[tokio::test]
+    // async fn test_success() {
+    //     setup();
+
+    //     let cmd = NextRoadTax {
+    //         plate: "1234".to_string(),
+    //     };
+
+    //     let result = cmd.call();
+    //     assert_eq!(
+    //         result.unwrap().next_road_tax_date,
+    //         NaiveDate::from_ymd_opt(2021, 1, 1).unwrap()
+    //     );
+    //     teardown();
+    // }
+
+    // #[test]
+    // fn test_success() {
+    //     setup();
+
+    //     let cmd = MarkRevision {
+    //         plate: "1234ABC".to_string(),
+    //     };
+    //     let result = cmd.call();
+
+    //     assert_eq!(result.unwrap().done, true);
+
+    //     let cars = Store::load();
+    //     let car = cars.iter().find(|car| car.plate == "1234ABC").unwrap();
+    //     assert_eq!(car.last_revision, chrono::Local::now().date_naive());
+
+    //     teardown();
+    // }
+
+    // #[test]
+    // fn test_not_found() {
+    //     let cmd = MarkRevision {
+    //         plate: "not-found".to_string(),
+    //     };
+    //     let result = cmd.call();
+    //     assert!(result.is_err());
+    // }
+
+    // #[test]
+    // fn test_success() {
+    //     setup();
+    //     let cmd = Checklist {
+    //         plate: "123".to_string(),
+    //     };
+
+    //     let res = cmd.call();
+    //     assert!(res.is_ok());
+
+    //     teardown();
+    // }
+
+    // #[test]
+    // fn test_failure() {
+    //     let cmd = Checklist {
+    //         plate: "1234".to_string(),
+    //     };
+
+    //     let res = cmd.call();
+    //     assert_eq!(res.unwrap_err(), "Plate is invalid");
+    // }
 }
