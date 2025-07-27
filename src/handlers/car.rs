@@ -18,7 +18,7 @@ pub async fn add(Json(car): Json<Car>) -> Result<impl IntoResponse, StatusCode> 
     let mut cars = Store::load();
 
     if let Some(_) = Store::find_by_plate(car.plate.as_str()) {
-        return Err(StatusCode::NOT_FOUND);
+        return Err(StatusCode::CONFLICT);
     }
 
     cars.push(car.clone());
@@ -132,8 +132,13 @@ pub async fn checklist(Path(plate): Path<String>) -> Result<impl IntoResponse, S
 
 #[cfg(test)]
 mod tests {
-    use crate::{core::utils::setup, router::app};
+    use crate::{
+        core::utils::{setup, teardown},
+        router::app,
+        store::Car,
+    };
     use axum_test::TestServer;
+    use chrono::NaiveDate;
 
     #[tokio::test]
     async fn test_list_empty() {
@@ -147,49 +152,55 @@ mod tests {
         response.assert_text("[]");
     }
 
-    // #[test]
-    // fn test_add() {
-    //     let add = Car {
-    //         owner: "Mateo".to_string(),
-    //         plate: "1234ABC".to_string(),
-    //         brand: Some("Toyota".to_string()),
-    //         last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-    //         last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-    //     };
+    #[tokio::test]
+    async fn test_add() {
+        setup();
+        let app = app();
+        let server = TestServer::new(app).unwrap();
 
-    //     assert_eq!(add.owner, "Mateo");
-    //     assert_eq!(add.plate, "1234ABC");
-    //     assert_eq!(add.brand.unwrap(), "Toyota");
+        let add = Car {
+            owner: "Mateo".to_string(),
+            plate: "1234ABC".to_string(),
+            brand: Some("Toyota".to_string()),
+            last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+        };
 
-    //     teardown();
-    // }
+        let response = server
+            .post("/cars")
+            .json(&add)
+            .expect_success()
+            .await
+            .json::<Car>();
 
-    // #[test]
-    // fn test_add_duplicate_plate() {
-    //     let car = Car {
-    //         owner: "Mateo".to_string(),
-    //         plate: "1234ABC".to_string(),
-    //         brand: Some("Toyota".to_string()),
-    //         last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-    //         last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-    //     };
+        assert_eq!(add.owner, response.owner);
+        assert_eq!(add.plate, response.plate);
+        assert_eq!(add.brand.unwrap(), response.brand.unwrap());
 
-    //     add(Json(car));
+        teardown();
+    }
 
-    //     let car = Car {
-    //         owner: "Mateo".to_string(),
-    //         plate: "1234ABC".to_string(),
-    //         brand: Some("Toyota".to_string()),
-    //         last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-    //         last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-    //     };
+    #[tokio::test]
+    async fn test_add_duplicate_plate() {
+        setup();
+        let app = app();
+        let server = TestServer::new(app).unwrap();
 
-    //     let result = add(Json(car));
+        let add = Car {
+            owner: "Mateo".to_string(),
+            plate: "1234ABC".to_string(),
+            brand: Some("Toyota".to_string()),
+            last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+        };
 
-    //     assert_eq!(result.unwrap_err(), "Plate already exists");
+        let _ = server.post("/cars").json(&add).expect_success().await;
 
-    //     teardown();
-    // }
+        let response = server.post("/cars").json(&add).expect_failure().await;
+        response.assert_status_conflict();
+
+        teardown();
+    }
 
     // #[tokio::test]
     // async fn test_reset() {
