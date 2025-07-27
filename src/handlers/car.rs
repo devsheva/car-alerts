@@ -36,7 +36,7 @@ pub async fn reset() -> StatusCode {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct NextRevisionDTO {
     plate: String,
     brand: Option<String>,
@@ -154,111 +154,151 @@ mod tests {
             .unwrap()
     }
 
-    #[tokio::test]
-    async fn test_list_empty() {
-        setup();
-        let server = new_test_app();
+    mod list {
+        use super::*;
 
-        let response = server.get("/cars").await;
+        #[tokio::test]
+        async fn test_list_empty() {
+            setup();
+            let server = new_test_app();
 
-        response.assert_status_ok();
-        response.assert_text("[]");
+            let response = server.get("/cars").await;
+
+            response.assert_status_ok();
+            response.assert_text("[]");
+        }
     }
 
-    #[tokio::test]
-    async fn test_add() {
-        setup();
-        let server = new_test_app();
+    mod add {
+        use super::*;
 
-        let add = Car {
-            owner: "Mateo".to_string(),
-            plate: "1234ABC".to_string(),
-            brand: Some("Toyota".to_string()),
-            last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-        };
+        #[tokio::test]
+        async fn test_add() {
+            setup();
+            let server = new_test_app();
 
-        let response = server
-            .post("/cars")
-            .json(&add)
-            .expect_success()
-            .await
-            .json::<Car>();
-
-        assert_eq!(add.owner, response.owner);
-        assert_eq!(add.plate, response.plate);
-        assert_eq!(add.brand.unwrap(), response.brand.unwrap());
-
-        teardown();
-    }
-
-    #[tokio::test]
-    async fn test_add_duplicate_plate() {
-        setup();
-        let server = new_test_app();
-
-        let add = Car {
-            owner: "Mateo".to_string(),
-            plate: "1234ABC".to_string(),
-            brand: Some("Toyota".to_string()),
-            last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-            last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-        };
-
-        let _ = server.post("/cars").json(&add).expect_success().await;
-
-        let response = server.post("/cars").json(&add).expect_failure().await;
-        response.assert_status_conflict();
-
-        teardown();
-    }
-
-    #[tokio::test]
-    async fn test_reset() {
-        setup();
-        let server = new_test_app();
-
-        let _ = server
-            .post("/cars")
-            .json(&Car {
+            let add = Car {
                 owner: "Mateo".to_string(),
                 plate: "1234ABC".to_string(),
                 brand: Some("Toyota".to_string()),
                 last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
                 last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
-            })
-            .await;
+            };
 
-        let content = fs::read_to_string(unsafe { FILE_PATH }).unwrap();
-        assert_ne!(content, "[]");
+            let response = server
+                .post("/cars")
+                .json(&add)
+                .expect_success()
+                .await
+                .json::<Car>();
 
-        let response = server.delete("/cars/reset").await;
-        response.assert_status(StatusCode::NO_CONTENT);
+            assert_eq!(add.owner, response.owner);
+            assert_eq!(add.plate, response.plate);
+            assert_eq!(add.brand.unwrap(), response.brand.unwrap());
+
+            teardown();
+        }
+
+        #[tokio::test]
+        async fn test_add_duplicate_plate() {
+            setup();
+            let server = new_test_app();
+
+            let add = Car {
+                owner: "Mateo".to_string(),
+                plate: "1234ABC".to_string(),
+                brand: Some("Toyota".to_string()),
+                last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+            };
+
+            let _ = server.post("/cars").json(&add).expect_success().await;
+
+            let response = server.post("/cars").json(&add).expect_failure().await;
+            response.assert_status_conflict();
+
+            teardown();
+        }
     }
 
-    // #[tokio::test]
-    // async fn test_next_revision() {
-    //     setup();
+    mod reset {
+        use super::*;
 
-    //     let cmd = NextRevision {
-    //         plate: "1234ABC".to_string(),
-    //     };
+        #[tokio::test]
+        async fn test_reset() {
+            setup();
+            let server = new_test_app();
 
-    //     let result = cmd.call().unwrap();
-    //     assert_eq!(result.plate, "1234ABC");
+            let _ = server
+                .post("/cars")
+                .json(&Car {
+                    owner: "Mateo".to_string(),
+                    plate: "1234ABC".to_string(),
+                    brand: Some("Toyota".to_string()),
+                    last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                    last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                })
+                .await;
 
-    //     teardown();
-    // }
+            let content = fs::read_to_string(unsafe { FILE_PATH }).unwrap();
+            assert_ne!(content, "[]");
 
-    // #[tokio::test]
-    // async fn test_not_found() {
-    //     let cmd = NextRevision {
-    //         plate: "1234ABC".to_string(),
-    //     };
+            let response = server.delete("/cars/reset").await;
+            response.assert_status(StatusCode::NO_CONTENT);
+        }
+    }
 
-    //     let output = cmd.call();
-    //     assert_eq!(output.unwrap_err(), "Car not found");
-    // }
+    mod next_revision {
+        use crate::handlers::car::NextRevisionDTO;
+
+        use super::*;
+
+        #[tokio::test]
+        async fn test_next_revision() {
+            setup();
+            let server = new_test_app();
+
+            let _ = server
+                .post("/cars")
+                .json(&Car {
+                    owner: "Mateo".to_string(),
+                    plate: "1234ABC".to_string(),
+                    brand: Some("Toyota".to_string()),
+                    last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                    last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                })
+                .await;
+
+            let plate = "1234ABC";
+
+            let next_revision = server
+                .get(&format!("/cars/{plate}/next_revision"))
+                .await
+                .json::<NextRevisionDTO>();
+
+            assert_eq!(next_revision.plate, "1234ABC");
+            assert_eq!(
+                next_revision.next_revision,
+                NaiveDate::from_ymd_opt(2023, 10, 10).unwrap()
+            );
+
+            teardown();
+        }
+
+        #[tokio::test]
+        async fn test_not_found() {
+            setup();
+            let server = new_test_app();
+
+            let response = server
+                .get("/cars/not_found/next_revision")
+                .expect_failure()
+                .await;
+            response.assert_status(StatusCode::NOT_FOUND);
+
+            teardown();
+        }
+    }
 
     // #[tokio::test]
     // async fn test_not_found() {
