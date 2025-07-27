@@ -298,6 +298,30 @@ mod tests {
 
             teardown();
         }
+
+        #[tokio::test]
+        async fn test_mark_revision_success() {
+            setup();
+            let server = new_test_app();
+
+            let _ = server
+                .post("/cars")
+                .json(&Car {
+                    owner: "Mateo".to_string(),
+                    plate: "1234ABC".to_string(),
+                    brand: Some("Toyota".to_string()),
+                    last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                    last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                })
+                .await;
+
+            let plate = "1234ABC";
+
+            let response = server.put(&format!("/cars/{plate}/next_revision")).await;
+            response.assert_status_ok();
+
+            teardown();
+        }
     }
 
     mod next_road_tax {
@@ -347,33 +371,6 @@ mod tests {
             teardown();
         }
     }
-
-    // #[test]
-    // fn test_success() {
-    //     setup();
-
-    //     let cmd = MarkRevision {
-    //         plate: "1234ABC".to_string(),
-    //     };
-    //     let result = cmd.call();
-
-    //     assert_eq!(result.unwrap().done, true);
-
-    //     let cars = Store::load();
-    //     let car = cars.iter().find(|car| car.plate == "1234ABC").unwrap();
-    //     assert_eq!(car.last_revision, chrono::Local::now().date_naive());
-
-    //     teardown();
-    // }
-
-    // #[test]
-    // fn test_not_found() {
-    //     let cmd = MarkRevision {
-    //         plate: "not-found".to_string(),
-    //     };
-    //     let result = cmd.call();
-    //     assert!(result.is_err());
-    // }
 
     mod checklist {
         use crate::handlers::car::ChecklistDTO;
