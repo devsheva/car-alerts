@@ -132,8 +132,13 @@ pub async fn checklist(Path(plate): Path<String>) -> Result<impl IntoResponse, S
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use crate::{
-        core::utils::{setup, teardown},
+        core::{
+            utils::{setup, teardown},
+            FILE_PATH,
+        },
         router::app,
         store::Car,
     };
@@ -208,17 +213,28 @@ mod tests {
         teardown();
     }
 
-    // #[tokio::test]
-    // async fn test_reset() {
-    //     setup();
+    #[tokio::test]
+    async fn test_reset() {
+        setup();
+        let server = new_test_app();
 
-    //     let content = fs::read_to_string(FILE_PATH).unwrap();
-    //     assert_ne!(content, "[]");
+        let _ = server
+            .post("/cars")
+            .json(&Car {
+                owner: "Mateo".to_string(),
+                plate: "1234ABC".to_string(),
+                brand: Some("Toyota".to_string()),
+                last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+            })
+            .await;
 
-    //     let result = reset().await;
+        let content = fs::read_to_string(unsafe { FILE_PATH }).unwrap();
+        assert_ne!(content, "[]");
 
-    //     assert_eq!(result, StatusCode::OK);
-    // }
+        let response = server.delete("/cars/reset").await;
+        response.assert_status(StatusCode::NO_CONTENT);
+    }
 
     // #[tokio::test]
     // async fn test_next_revision() {
