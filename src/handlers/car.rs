@@ -3,7 +3,7 @@ use std::fs;
 use axum::{extract::Path, response::IntoResponse, Json};
 use chrono::NaiveDate;
 use hyper::StatusCode;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     core::FILE_PATH,
@@ -101,7 +101,7 @@ pub async fn mark_revision(Path(plate): Path<String>) -> StatusCode {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ChecklistDTO {
     plate: String,
     next_revision: NaiveDate,
@@ -313,26 +313,60 @@ mod tests {
     //     assert!(result.is_err());
     // }
 
-    // #[test]
-    // fn test_success() {
-    //     setup();
-    //     let cmd = Checklist {
-    //         plate: "123".to_string(),
-    //     };
+    mod checklist {
+        use crate::handlers::car::ChecklistDTO;
 
-    //     let res = cmd.call();
-    //     assert!(res.is_ok());
+        use super::*;
 
-    //     teardown();
-    // }
+        #[tokio::test]
+        async fn test_success() {
+            setup();
+            let server = new_test_app();
 
-    // #[test]
-    // fn test_failure() {
-    //     let cmd = Checklist {
-    //         plate: "1234".to_string(),
-    //     };
+            let _ = server
+                .post("/cars")
+                .json(&Car {
+                    owner: "Mateo".to_string(),
+                    plate: "1234ABC".to_string(),
+                    brand: Some("Toyota".to_string()),
+                    last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                    last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                })
+                .await;
 
-    //     let res = cmd.call();
-    //     assert_eq!(res.unwrap_err(), "Plate is invalid");
-    // }
+            let plate = "1234ABC";
+
+            let checklist = server
+                .get(&format!("/cars/{plate}/checklist"))
+                .await
+                .json::<ChecklistDTO>();
+
+            assert_eq!(checklist.plate, plate);
+
+            teardown();
+        }
+
+        #[tokio::test]
+        async fn test_not_found() {
+            setup();
+            let server = new_test_app();
+
+            let _ = server
+                .post("/cars")
+                .json(&Car {
+                    owner: "Mateo".to_string(),
+                    plate: "1234ABC".to_string(),
+                    brand: Some("Toyota".to_string()),
+                    last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                    last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                })
+                .await;
+
+            let plate = "1234ABC";
+
+            let response = server.get(&format!("/cars/{plate}")).expect_failure().await;
+            response.assert_status_not_found();
+            teardown();
+        }
+    }
 }
