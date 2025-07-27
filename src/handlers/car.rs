@@ -139,12 +139,20 @@ mod tests {
     };
     use axum_test::TestServer;
     use chrono::NaiveDate;
+    use hyper::StatusCode;
+
+    fn new_test_app() -> TestServer {
+        let app = app();
+        TestServer::builder()
+            .expect_success_by_default()
+            .build(app)
+            .unwrap()
+    }
 
     #[tokio::test]
     async fn test_list_empty() {
         setup();
-        let app = app();
-        let server = TestServer::new(app).unwrap();
+        let server = new_test_app();
 
         let response = server.get("/cars").await;
 
@@ -155,8 +163,7 @@ mod tests {
     #[tokio::test]
     async fn test_add() {
         setup();
-        let app = app();
-        let server = TestServer::new(app).unwrap();
+        let server = new_test_app();
 
         let add = Car {
             owner: "Mateo".to_string(),
@@ -183,8 +190,7 @@ mod tests {
     #[tokio::test]
     async fn test_add_duplicate_plate() {
         setup();
-        let app = app();
-        let server = TestServer::new(app).unwrap();
+        let server = new_test_app();
 
         let add = Car {
             owner: "Mateo".to_string(),
