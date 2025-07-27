@@ -60,7 +60,7 @@ pub async fn next_revision(Path(plate): Path<String>) -> Result<impl IntoRespons
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct NextRoadTaxDTO {
     plate: String,
     next_road_tax_date: NaiveDate,
@@ -300,31 +300,53 @@ mod tests {
         }
     }
 
-    // #[tokio::test]
-    // async fn test_not_found() {
-    //     let cmd = NextRoadTax {
-    //         plate: "not_found".to_string(),
-    //     };
+    mod next_road_tax {
+        use crate::handlers::car::NextRoadTaxDTO;
 
-    //     let result = cmd.call();
-    //     assert_eq!(result.unwrap_err(), "Car with plate not_found not found");
-    // }
+        use super::*;
 
-    // #[tokio::test]
-    // async fn test_success() {
-    //     setup();
+        #[tokio::test]
+        async fn test_not_found() {
+            setup();
+            let server = new_test_app();
 
-    //     let cmd = NextRoadTax {
-    //         plate: "1234".to_string(),
-    //     };
+            let response = server
+                .get("/cars/not_found/next_road_tax")
+                .expect_failure()
+                .await;
+            response.assert_status(StatusCode::NOT_FOUND);
+        }
 
-    //     let result = cmd.call();
-    //     assert_eq!(
-    //         result.unwrap().next_road_tax_date,
-    //         NaiveDate::from_ymd_opt(2021, 1, 1).unwrap()
-    //     );
-    //     teardown();
-    // }
+        #[tokio::test]
+        async fn test_success() {
+            setup();
+            let server = new_test_app();
+
+            let _ = server
+                .post("/cars")
+                .json(&Car {
+                    owner: "Mateo".to_string(),
+                    plate: "1234ABC".to_string(),
+                    brand: Some("Toyota".to_string()),
+                    last_revision: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                    last_road_tax: NaiveDate::from_ymd_opt(2021, 10, 10).unwrap(),
+                })
+                .await;
+
+            let plate = "1234ABC";
+
+            let next_road_tax = server
+                .get(&format!("/cars/{plate}/next_road_tax"))
+                .await
+                .json::<NextRoadTaxDTO>();
+
+            assert_eq!(
+                next_road_tax.next_road_tax_date,
+                NaiveDate::from_ymd_opt(2022, 10, 10).unwrap()
+            );
+            teardown();
+        }
+    }
 
     // #[test]
     // fn test_success() {
