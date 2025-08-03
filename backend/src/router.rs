@@ -3,8 +3,11 @@ use axum::{
     routing::{delete, get},
     Router,
 };
+use tower_http::cors::{Any, CorsLayer};
 
 pub fn app() -> Router {
+    let cors = CorsLayer::new().allow_origin(Any);
+
     Router::new()
         .route("/cars", get(car::list).post(car::add))
         .route("/cars/reset", delete(car::reset))
@@ -14,6 +17,7 @@ pub fn app() -> Router {
         )
         .route("/cars/{plate}/next_road_tax", get(car::next_road_tax))
         .route("/cars/{plate}/checklist", get(car::checklist))
+        .layer(cors)
 }
 
 #[cfg(test)]
