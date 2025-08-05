@@ -22,8 +22,7 @@
     /* paths */
     "baseUrl": "src",
     "paths": {
-      "@components/*": ["components/*"],
-      "@types/*": ["@types/*"]
+      "@components/*": ["components/*"]
     }
   },
   "include": ["src"]
