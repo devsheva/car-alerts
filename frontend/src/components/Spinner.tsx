@@ -1,9 +1,9 @@
-import { Box, CircularProgress } from "@mui/material";
+import { LoaderCircle } from "lucide-react";
 
 export default function Spinner() {
   return (
-    <Box display={"flex"} justifyContent={"center"} alignItems={"center"}>
-      <CircularProgress />
-    </Box>
+    <div className="flex items-center justify-center min-h-screen">
+      <LoaderCircle className="animate-spin" size={16} />
+    </div>
   );
 }
