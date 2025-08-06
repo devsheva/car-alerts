@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import './App.css'
 import Loading from '@components/Loading'
+import { Plus } from 'lucide-react'
 
 const CarList = lazy(() => import('pages/CarList'))
 
@@ -15,6 +16,9 @@ const App = () => {
         <Suspense fallback={<Loading />}>
           <CarList />
         </Suspense>
+        <button className="fixed bg-purple-600 hover:bg-purple-700 p-4 rounded-full bottom-4 right-4 z-50">
+          <Plus />
+        </button>
       </main>
     </div>
   )
