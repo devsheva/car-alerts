@@ -1,12 +1,27 @@
-import "./App.css";
+import { lazy, Suspense } from 'react'
+import './App.css'
+import Loading from '@components/Loading'
+import { Plus } from 'lucide-react'
+
+const CarList = lazy(() => import('pages/CarList'))
 
 const App = () => {
   return (
-    <div className="content">
-      <h1>Rsbuild with React</h1>
-      <p>Start building amazing things with Rsbuild.</p>
-    </div>
-  );
-};
+    <div className="min-h-screen text-white font-sans bg-gradient-to-b from-[#020917] to-[#101725]">
+      <header className="p-4 text-center">
+        <h1 className="text-2xl  text-purple-400 font-bold">Car Alerts</h1>
+      </header>
 
-export default App;
+      <main className="p-4">
+        <Suspense fallback={<Loading />}>
+          <CarList />
+        </Suspense>
+        <button className="fixed bg-purple-600 hover:bg-purple-700 p-4 rounded-full bottom-4 right-4 z-50">
+          <Plus />
+        </button>
+      </main>
+    </div>
+  )
+}
+
+export default App

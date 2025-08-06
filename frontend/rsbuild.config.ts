@@ -1,7 +1,10 @@
-import { defineConfig } from '@rsbuild/core';
-import { pluginReact } from '@rsbuild/plugin-react';
+import { defineConfig } from '@rsbuild/core'
+import { pluginReact } from '@rsbuild/plugin-react'
 
 export default defineConfig({
+  html: {
+    title: 'Car Alerts',
+  },
   plugins: [pluginReact()],
   tools: {
     postcss: {
@@ -10,4 +13,4 @@ export default defineConfig({
       },
     },
   },
-});
+})
