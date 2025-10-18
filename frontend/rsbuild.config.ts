@@ -4,6 +4,7 @@ import { pluginReact } from '@rsbuild/plugin-react'
 export default defineConfig({
   html: {
     title: 'Car Alerts',
+    favicon: './public/favicon.svg',
   },
   plugins: [pluginReact()],
   tools: {
